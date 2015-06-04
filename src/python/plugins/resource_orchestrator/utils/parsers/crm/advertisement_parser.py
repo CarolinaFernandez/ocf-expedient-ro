@@ -31,8 +31,14 @@ class CRMv3AdvertisementParser(ParserBase):
         # the data before returning the links
         links = self.links()
 
+        print ".... DEBUG CRM > all: ", self.rspec
+
+        print ".... DEBUG CRM > all nodes w/o namespace: ", [ n for n in self.rspec.iterchildren("node") ]
+        print ".... DEBUG CRM > all nodes with namespace: ", [ n for n in self.rspec.iterchildren("{%s}node" % (self.xmlns)) ]
+
         for n in self.rspec.iterchildren("{%s}node" % (self.xmlns)):
             # sliver = None
+            print ".... DEBUG > CRM parser node iter: ", n.attrib.get("component_id")
             available = n.find("{%s}available" % (self.xmlns))
             if available is not None:
                 available = available.attrib.get("now")

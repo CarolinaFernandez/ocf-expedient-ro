@@ -14,15 +14,16 @@ from django.views.generic import simple
 from expedient.clearinghouse.utils import post_message_to_current_user
 from expedient.common.messaging.models import DatedMessage
 from expedient.common.permissions.shortcuts import give_permission_to
-from io import BytesIO
-from lxml import etree
 from resource_orchestrator.controller.resource_parsing import ResourceParser
 from resource_orchestrator.controller.resource import ResourceOrchestrator as ResourceOrchestratorController
-from resource_orchestrator.forms.resource_orchestrator_aggregate import ResourceOrchestratorAggregate as ResourceOrchestratorAggregateForm
+# IMPORTANT NOTE: Module name definitely not Pythonic, but it is 
+# necessary to use the same name in module and class for Expedient 
+# to be able to recognize it as a new Aggregate
+from resource_orchestrator.forms.ResourceOrchestratorAggregate import ResourceOrchestratorAggregate as ResourceOrchestratorAggregateForm
+from resource_orchestrator.models.ResourceOrchestratorAggregate import ResourceOrchestratorAggregate as ResourceOrchestratorAggregateModel
 from resource_orchestrator.forms.xmlrpc_server_proxy import xmlrpcServerProxy as xmlrpcServerProxyForm
 from resource_orchestrator.models.xmlrpc_server_proxy import xmlrpcServerProxy as xmlrpcServerProxyModel
 from resource_orchestrator.models.xmlrpc_server_proxy import DEFAULT_UPLOAD_PATH
-from resource_orchestrator.models.resource_orchestrator_aggregate import ResourceOrchestratorAggregate as ResourceOrchestratorAggregateModel
 #from resource_orchestrator.models.ResourceOrchestrator import ResourceOrchestrator as ResourceOrchestratorModel
 from expedient.common.clients import xmlrpc_secure
 from django.core.files.base import ContentFile
@@ -86,41 +87,11 @@ def aggregate_crud(request, agg_id=None):
             print "client.key.name dir>> ",  client.key.__dict__
             print "client.key.instance.name dir>> ",  client.key.instance.__dict__
 
-
             # Retrieve contents of client.key and client.cert, not the whole object
             s = xmlrpc_secure.make_client(client.url, client.key.name, client.certificate.name)
             try:
-
-#                s.GetVersion()
-#                geni_options = {"geni_rspec_version": 3}
-#                geni_options = [ 
-#                    {"type": "geni", "version": 3, 
-#                     "schema": "http://www.geni.net/resources/rspec/3/request.xsd", 
-#                     "namespace": "http://www.geni.net/resources/rspec/3",
-#                     "extensions": [], 
-#                    }, 
-#                ] 
-
-                geni_options = {'geni_rspec_version': {'version': '3', 'type': 'geni'}, 'geni_available': False, 'geni_compressed': True}
-
-
-                geni_credentials = []
-                list_resources = s.ListResources(geni_credentials, geni_options)
-
-                print "LISTRESOURCES", list_resources
-
-		
-		# Call to resource_parsing to parse all lr data
-                # resource_parsing(lr)
-		try:
-                    parser = ResourceParser(from_string=list_resources)
-                
-                #res = open("/home/felix/listresources.xml", "wb")
-                #res.write(lr)
-                #res.close() 
-                except Exception as e:
-                    print "Unable to parse list of resources"
-
+                # s.GetVersion()
+                sync_ro_resources(s)
 
             # TODO Check what happens when certificates are incorrect! (untrusted)
             # TODO Check what hapens when certificates are not signed by CH!
@@ -138,7 +109,6 @@ def aggregate_crud(request, agg_id=None):
 
             if not errors:
                 client = client_form.save()
-                print "\n\n\n\n\nLISTRESOURCES!!!!!!!!!!!! ", lr
                 print "\n\n\n\n\nrequest FILES!!!!!!!!!!!! dict ", request.FILES.__dict__
                 print "\n\n\n\n\nrequest POST!!!!!!!!!!!! dict ", request.POST.__dict__
                 print "\n\n\n\n\nclient 1!!!!!!!!!!!! ", client.__dict__
@@ -223,7 +193,7 @@ def aggregate_crud(request, agg_id=None):
 #                        do_sync = agg_form.initial.get("sync_resources")
 #
 #                    if do_sync:
-#                        failed_resources = sync_am_resources(agg_id, s)
+#                        failed_resources = sync_ro_resources(agg_id, s)
 #
 #                        if failed_resources:
 #                            DatedMessage.objects.post_message_to_user(
@@ -231,7 +201,7 @@ def aggregate_crud(request, agg_id=None):
 #                                user=request.user, msg_type=DatedMessage.TYPE_WARNING,
 #                            )
 #                except:
-#                    warning = "Could not synchronize AM resources within Expedient"
+#                    warning = "Could not synchronize RO resources within Expedient"
 #                    DatedMessage.objects.post_message_to_user(
 #                        errors, user=request.user, msg_type=DatedMessage.TYPE_WARNING,
 #                    )
@@ -280,48 +250,28 @@ def aggregate_crud(request, agg_id=None):
         extra_context=extra_context_dict
     )
 
-def delete_resources(agg_id):
-    resource_set = ResourceOrchestratorAggregateModel.objects.get(id = agg_id).resource_set.all()
-    for resource in resource_set:
-        resource.delete()
-
-def sync_am_resources(agg_id, xmlrpc_server):
+def sync_ro_resources(xmlrpc_client):
     """
-    Retrieves ResourceOrchestrator objects from the AM's xmlrpc server every time the AM is updated
+    Retrieves the resources from the Resource Orchestrator
+    XMLRPC API every time the RO is updated
     """
-    connections = dict()
-    failed_resources = []
-    resources = xmlrpc_server.get_resources()
-    context = etree.iterparse(BytesIO(resources))
-    delete_resources(agg_id)
-    aggregate = ResourceOrchestratorAggregateModel.objects.get(id = agg_id)
-#    for slice in aggregate.slice_set:
-    # File (nodes)
-    for action, elem in context:
-        node_name = ""
-        instance = am_resource()
-        children_context = elem.iterchildren()
-        # Node (tags)
-        for elem in children_context:
-            if "connection" not in elem.tag:
-                setattr(instance, elem.tag, elem.text)
-                if elem.tag == "name":
-                    node_name = elem.text
-            elif elem.tag == "connections":
-                connections[node_name] = []
-                connections_context = elem.iterchildren()
-                for connection in connections_context:
-                    connections[node_name].append(connection.text)
+    geni_options = {
+        "geni_rspec_version": {
+            "version": "3",
+            "type": "geni"
+        },
+        "geni_available": False,
+        "geni_compressed": True
+    }
+    # TODO: Obtain proper credentials from the ClearingHouse
+    geni_credentials = []
+    try:
+        list_resources = xmlrpc_client.ListResources(geni_credentials, geni_options)
+        print "RO > List Resources: ", list_resources
+        # Call to resource_parsing to parse all data from ListResources
         try:
-            if instance:
-                ResourceOrchestratorController.create(instance, agg_id)
-        except:
-            try:
-                failed_resources.append(instance.name)
-            except:
-                pass
-
-    # TODO perform some resource sync
-
-    return failed_resources
-
+            parser = ResourceParser(from_string=list_resources)
+        except Exception as e:
+            print "RO > Unable to parse list of resources"
+    except Exception as e:
+        print "RO > Unable to fetch list of resources"

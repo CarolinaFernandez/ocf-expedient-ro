@@ -22,6 +22,7 @@ class ROv3AdvertisementParser(ParserBase):
     def com_nodes(self):
         try:
             nodes = self.__com_parser.nodes()
+            print ".... DEBUG. COM_NODES: ", nodes
             return [n for n in nodes
                     if n.get('component_manager_uuid') == "felix:CRM"]
         except:
@@ -30,6 +31,7 @@ class ROv3AdvertisementParser(ParserBase):
     def com_links(self):
         try:
             links = self.__com_parser.links()
+            print ".... DEBUG. COM_LINKS: ", links
             return [l for l in links
                     if l.get('component_manager_uuid') == "felix:CRM"]
         except:
@@ -38,12 +40,14 @@ class ROv3AdvertisementParser(ParserBase):
     # SDN resources (datapaths & links)
     def sdn_nodes(self):
         try:
+            print ".... DEBUG. SDN_NODES: ", self.__of_parser.datapaths()
             return self.__of_parser.datapaths()
         except:
             return []
 
     def sdn_links(self):
         try:
+            print ".... DEBUG. SDN_LINKS: ", self.__of_parser.links()
             return self.__of_parser.links()
         except:
             return []
