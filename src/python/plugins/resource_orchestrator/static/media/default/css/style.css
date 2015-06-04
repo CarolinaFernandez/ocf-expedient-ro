@@ -1,0 +1,54 @@
+div.resource_orchestrator_create_sensor {
+    clear: both;
+}
+
+div.resource_orchestrator_no_sensors {
+    margin-top: 10px;
+}
+
+div.resource_orchestrator_sensors {
+    margin-bottom: 15px;
+    margin-right: 10px;
+}
+
+table.resource_orchestrator_sensors {
+    border: 0px;
+    border-collapse: collapse;
+    border-left: 15px solid #333;
+    border-spacing: 0px;
+    font-size: 11px;
+    width: 100%;
+}
+
+table.resource_orchestrator_sensors td {
+  padding-left: 10px;
+}
+
+table.resource_orchestrator_sensors th {
+    background-color: #333;
+    border: 0px;
+    color: #eee;
+    padding: 4px;
+    text-align: left;
+}
+
+table.resource_orchestrator_sensors tr {
+    border: 0px;
+}
+
+table.resource_orchestrator_sensors tr.even {
+    background-color: #aaa;
+}
+
+table.resource_orchestrator_sensors tr.odd {
+    background-color: #ccc;
+}
+
+td ul li {
+    list-style: none;
+}
+
+/*select {
+    width: 100% !important;
+}*/
+
