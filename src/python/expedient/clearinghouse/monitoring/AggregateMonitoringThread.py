@@ -1,6 +1,6 @@
 from threading import Thread
 from expedient.clearinghouse.aggregate.models import *
-from expedient.common.clients import xmlrpc, xmlrpc_secure
+from expedient.common.clients import xmlrpc, geni
 
 """
 author: msune, CarolinaFernandez
@@ -29,9 +29,7 @@ class AggregateMonitoringThread(Thread):
                 agg_xmlrpc_server_protocol = "http"
                 agg_xmlrpc_server_url = ":".join(agg.client.url.split("://")[1:])
             agg_xmlrpc_server = "%s://" % agg_xmlrpc_server_protocol
-            if "https://" in agg_xmlrpc_server \
-                and getattr(agg.client, "username", None) is not None \
-                and getattr(agg.client, "password", None) is not None:
+            if "https://" in agg_xmlrpc_server:
                 agg_xmlrpc_server += agg.client.username + ":" + agg.client.password + "@"
             agg_xmlrpc_server += agg_xmlrpc_server_url
             
@@ -39,7 +37,7 @@ class AggregateMonitoringThread(Thread):
             agg_server_address = agg_xmlrpc_server_url.split(":")[0]
             agg_server_port = agg_xmlrpc_server_url.split(":")[1].split("/")[0]
             
-            # Non-eiSoil AMs
+            # Non-AMsoil AMs
             try:
                 agg_info = xmlrpc.XmlRpcClient.call_method(agg_xmlrpc_server, "get_am_info", "")
                 # Save fields only for OF AMs
@@ -54,11 +52,10 @@ class AggregateMonitoringThread(Thread):
                 try:
                     # Older OF AM APIs shall not contain 'get_am_info' method. Try 'ping' in that case:
                     xmlrpc_result = xmlrpc.XmlRpcClient.call_method(agg_xmlrpc_server, "ping", "hello")
-                # eiSoil AMs
+                # AMsoil AMs
                 except Exception as e:
-                    # Server address and port for the aggregate
-                    s = xmlrpc_secure.make_client(agg.client.url, agg.client.key.name, agg.client.certificate.name)
-                    geni_result = s.GetVersion()
+                    client = geni.GENIClient(agg_server_address, agg_server_port)
+                    geni_result = client.call_method("GetVersion")
             print "Aggregate: %s => ALIVE" % aggregate.name
             
             # If any of the above worked, mark as available
