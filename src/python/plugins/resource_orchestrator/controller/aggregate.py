@@ -261,7 +261,8 @@ def sync_ro_resources(xmlrpc_client):
             "type": "geni"
         },
         "geni_available": False,
-        "geni_compressed": True
+        #"geni_compressed": True,
+        "geni_compressed": False,
     }
     # TODO: Obtain proper credentials from the ClearingHouse
     geni_credentials = []
