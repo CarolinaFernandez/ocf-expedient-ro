@@ -142,6 +142,7 @@ def detail(request, slice_id):
 
     template_list_computation = []
     template_list_network = []
+    template_list_aggregate = []
     for plugin in PLUGIN_LOADER.plugin_settings:
         try:
             plugin_dict = PLUGIN_LOADER.plugin_settings.get(plugin)
@@ -151,6 +152,8 @@ def detail(request, slice_id):
                 template_list_computation.append(plugin_dict.get("paths").get("template_resources"))
             elif plugin_dict.get("general").get("resource_type") == "network":
                 template_list_network.append(plugin_dict.get("paths").get("template_resources"))
+            elif plugin_dict.get("general").get("resource_type") == "aggregate":
+                template_list_aggregate.append(plugin_dict.get("paths").get("template_resources"))
         except Exception as e:
             print "[WARNING] Could not obtain template to add resources to slides in plugin '%s'. Details: %s" % (str(plugin), str(e))
 
@@ -167,6 +170,7 @@ def detail(request, slice_id):
                 ("Slice %s" % slice.name, reverse("slice_detail", args=[slice_id])),
             ),
             "resource_list": resource_list,
+            "plugin_template_list_aggregate": template_list_aggregate,
             "plugin_template_list_network": template_list_network,
             "plugin_template_list_computation": template_list_computation,
             "plugins_path": PLUGIN_LOADER.plugins_path,

@@ -6,8 +6,9 @@ urlpatterns = patterns("resource_orchestrator.controller.aggregate",
 )
 
 urlpatterns = urlpatterns + patterns("resource_orchestrator.controller.gui_dispatcher",
-    url(r"^create/(?P<slice_id>\d+)/(?P<agg_id>\d+)/$", "create_resource", name="resource_orchestrator_create"),
-    url(r"^manage/(?P<resource_id>\d+)/(?P<action_type>\w+)/$", "manage_resource", name="resource_orchestrator_manage"),
-    url(r"^crud/(?P<slice_id>\d+)/(?P<agg_id>\d+)/$", "resource_crud", name="resource_orchestrator_resource_crud"),
+    url(r"^list/$", "list_resources", name="resource_orchestrator_list"),
+    url(r"^create/(?P<slice_id>\d+)/(?P<agg_id>\d+)/$", "create_resources", name="resource_orchestrator_create"),
+    url(r"^status/(?P<slice_id>\d+)/(?P<agg_id>\d+)/$", "status_resources", name="resource_orchestrator_status"),
+    url(r"^delete/(?P<slice_id>\d+)/(?P<agg_id>\d+)/$", "delete_resources", name="resource_orchestrator_delete"),
 )
 

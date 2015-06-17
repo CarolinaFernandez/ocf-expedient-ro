@@ -6,7 +6,8 @@
 
 	{% block content %}
 
-	{% for agg in sr_aggs %}
+        {# Should probably use 'resource_managers' tag #}
+	{% for agg in resource_managers_list %}
 	<div id="ResourceOrchestratorsContainer" class="expandable">
 	    <h2>
 	      <a id="sram_{{agg.id}}" class="expandableTooltipable expandableCtl" ref="#/">
@@ -18,8 +19,8 @@
 	    </h2>
 	  <div id="sram_{{agg.id}}Container" class="aggregateManager expandable" style="margin-top: 10px;">
 	    <table class="aggregateManagerDetail">
-	      <form action="/resource_orchestrator/create/{{ slice.id }}/{{agg.id}}/" method="POST">
-		{% csrf_token %}
+	      <!--<form action="/resource_orchestrator/create/{{ slice.id }}/{{agg.id}}/" method="POST">-->
+		{#{% csrf_token %}#}
 	      <tr>
 		<td class="label">
 		  Name:
@@ -67,20 +68,35 @@
 		    </td>
 		</tr>
 
-	{# Actions #}
+        {# Actions #}
 	<tr>
 	  <td class="label" width="100px;">
 	    Actions:
 	  </td>
 	  <td>
-	    <div id="resource_orchestrator_create_sensor">
-      <!-- Checks that ResourceOrchestrator aggregate is reachable -->
-      <input type="submit" name="create_resource" id="create_resourceorchestrator_agg_{{agg.id}}" value="Create Resource Orchestrator Resource" {% if not agg.available %} onclick="alert('Warning: Resource Orchestrator Aggregate \'{{ agg.name }}\' is not available'); {% endif %}" />
-    </div>
-  </td>
-</tr>
+	    <div id="resource_orchestrator_provision">
+              <form action="/resource_orchestrator/list/" method="POST">
+                {% csrf_token %}
+                <input type="submit" name="show_resources" id="create_resourceorchestrator_agg_{{agg.id}}" value="Show resources" {% if not agg.available %} onclick="alert('Warning: Resource Orchestrator \'{{ agg.name }}\' is not available'); {% endif %}" />
+              </form>
+              <form action="/resource_orchestrator/create/{{slice.id}}/{{agg.id}}/" method="POST">
+                {% csrf_token %}
+                <input type="submit" name="create_resources" id="create_resourceorchestrator_agg_{{agg.id}}" value="Provision resources" {% if not agg.available %} onclick="alert('Warning: Resource Orchestrator \'{{ agg.name }}\' is not available'); {% endif %}" />
+              </form>
+              <form action="/resource_orchestrator/status/{{slice.id}}/{{agg.id}}/" method="POST">
+                {% csrf_token %}
+                <input type="submit" name="check_resources" id="create_resourceorchestrator_agg_{{agg.id}}" value="Check status of resources" {% if not agg.available %} onclick="alert('Warning: Resource Orchestrator \'{{ agg.name }}\' is not available'); {% endif %}" />
+              </form
+              {# Use {% url 'url_name' %} template #}
+              <form action="/resource_orchestrator/delete/{{slice.id}}/{{agg.id}}/" method="POST">
+                {% csrf_token %}
+                <input type="submit" name="delete_resources" id="create_resourceorchestrator_agg_{{agg.id}}" value="Delete resources" {% if not agg.available %} onclick="alert('Warning: Resource Orchestrator \'{{ agg.name }}\' is not available'); {% endif %}" />
+              </form>
+            </div>
+          </td>
+        </tr>
 <!-- AM resources container div -->
-</form>
+<!--</form>-->
 
 <!--Remove AM-->
 <tr>

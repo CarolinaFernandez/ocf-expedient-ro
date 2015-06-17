@@ -131,6 +131,20 @@
         <div class="tooltip" id="expandableHelp" style="font-size:normal"> Click to expand/collapse</div>
 
         {# Begin: Aggregate details - loads templates from plugins - partial templates #}
+        {% if plugin_template_list_aggregate %}
+          <h2 class="resources">
+            <a id="aggregateResources" class="expandableTooltipable expandableCtl resources" ref="#/">
+              Aggregated resources
+              <span class="opened">&#x25B2;</span>
+            </a>
+          </h2>
+          <div id="aggregateResourcesContainer" class="expandable">
+          {% for plugin_addresources in plugin_template_list_aggregate %}
+            {% include plugin_addresources %}
+          {% endfor %}
+          </div>
+        {% endif %}
+
         {% if plugin_template_list_network %}
           <h2 class="resources">
             <a id="networkResources" class="expandableTooltipable expandableCtl resources" ref="#/">
